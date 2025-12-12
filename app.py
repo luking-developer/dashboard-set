@@ -16,48 +16,95 @@ NUEVAS_CABECERAS = [
 
 def limpiar_y_procesar_xlsx(uploaded_file: io.BytesIO) -> pl.DataFrame:
     """
-    Lee un archivo XLSX, elimina las 3 primeras filas y renombra las cabeceras con Polars.
+    Lee un archivo XLSX, elimina las 3 primeras filas, renombra y aplica lógica de relleno (fillna).
     """
     
-    st.info("🌉 Leyendo el archivo XLSX y omitiendo las 3 primeras filas...")
+    st.info("🌉 Leyendo XLSX, omitiendo 3 filas y pasando a Polars...")
     
     try:
-        # Usamos Pandas como puente robusto para la lectura de Excel.
-        # header=None: Le dice a Pandas que no use ninguna fila como cabecera.
-        # skiprows=3: Omite las primeras 3 filas del archivo.
+        # Usamos Pandas para la lectura de Excel: header=None, skiprows=3
         df_pd = pd.read_excel(
             uploaded_file,
             header=None,
             skiprows=3,
             engine='openpyxl',
-            sheet_name=0 # Asume la primera hoja (índice 0)
+            sheet_name=0
         )
         
     except Exception as e:
         st.error(f"Error al intentar leer el archivo Excel: {e}")
         return pl.DataFrame()
 
-    # --- C. Transformación y Limpieza con Polars (La Fuerza) ---
-    st.info("💪 Pasando a Polars para validación y reestructuración...")
-    
-    # 1. Convertir a Polars
+    # --- A. Transformación, Validación y Renombramiento ---
     df_pl = pl.from_pandas(df_pd)
     
-    # 2. Validación de Columnas
+    # 1. Validación de Columnas
     if df_pl.shape[1] != len(NUEVAS_CABECERAS):
-        st.error(f"⚠️ **FALLO CRÍTICO DE FORMATO.**")
-        st.error(f"El archivo subido tiene **{df_pl.shape[1]}** columnas después de la limpieza. Se esperaban **{len(NUEVAS_CABECERAS)}** columnas.")
+        st.error(f"⚠️ **FALLO CRÍTICO DE FORMATO.** El archivo tiene **{df_pl.shape[1]}** columnas. Se esperaban **{len(NUEVAS_CABECERAS)}**.")
         st.stop()
         
-    # 3. Preparar el Renombramiento
-    # Pandas, al usar header=None, nombra las columnas como 0, 1, 2, ...
-    # Polars hereda estos nombres como strings '0', '1', '2', ...
+    # 2. Renombrar las columnas
     old_col_names = [str(i) for i in range(len(NUEVAS_CABECERAS))]
     column_mapping = {old_col: new_col for old_col, new_col in zip(old_col_names, NUEVAS_CABECERAS)}
-    
-    # 4. Renombrar las columnas
     df_final = df_pl.rename(column_mapping)
     
+    # --- B. Lógica de Relleno (Fill Null) con Polars ---
+    st.info("🧠 Aplicando lógica de propagación y relleno condicional...")
+    
+    # 1. Definir columnas clave
+    cols_ffill = ["Sucursal", "Area", "Distrito"]
+    
+    # 2. Aplicar Propagación Hacia Adelante (ffill) a las columnas clave
+    # Si detecta None, copia el valor inmediatamente anterior.
+    for col in cols_ffill:
+        # Nota: fill_null(strategy="forward") es la función de ffill en Polars
+        df_final = df_final.with_columns(
+            pl.col(col).fill_null(strategy="forward")
+        )
+
+    # 3. Relleno Condicional para el RESTO de columnas
+    
+    # Identificar columnas numéricas vs. de string
+    # Polars infiere tipos durante la conversión de Pandas.
+    
+    # a) Columnas que deben rellenarse con 0 (Numéricas)
+    # Buscamos columnas que sean de tipo Numérico (Integer o Float) Y que NO sean las de ffill
+    numerical_cols = [
+        name for name, dtype in df_final.schema.items() 
+        if dtype in {pl.Int8, pl.Int16, pl.Int32, pl.Int64, pl.Float32, pl.Float64}
+        and name not in cols_ffill
+    ]
+    
+    # b) Columnas que deben MANTENER los nulls (Strings/Otros)
+    # Buscamos columnas que NO sean numéricas Y NO sean las de ffill.
+    string_like_cols = [
+        name for name, dtype in df_final.schema.items() 
+        if dtype not in {pl.Int8, pl.Int16, pl.Int32, pl.Int64, pl.Float32, pl.Float64}
+        and name not in cols_ffill
+    ]
+
+    # Aplicar relleno con 0 a todas las columnas numéricas
+    df_final = df_final.with_columns(
+        [pl.col(col).fill_null(0) for col in numerical_cols]
+    )
+
+    # Para string_like_cols (como Descripciones, Domicilio, etc.): 
+    # Dejamos la operación de .fill_null() fuera. Polars mantiene los valores Null/None
+    # por defecto si no se les aplica ninguna función de relleno.
+
+    # 4. Forzar el tipo de dato de las columnas de String/Categoría si Polars las dejó como Int/Float.
+    # Esto es una limpieza extra para evitar que, si una columna de string tiene muchos None,
+    # Polars la haya inferido como numérica.
+    for col in string_like_cols:
+         df_final = df_final.with_columns(pl.col(col).cast(pl.String))
+         
+    # 5. Volver a propagar por si la conversión de Pandas dejó los None como None String.
+    # Este paso es una doble comprobación de robustez, no debería ser estrictamente necesario.
+    for col in cols_ffill:
+        df_final = df_final.with_columns(
+            pl.col(col).fill_null(strategy="forward")
+        )
+         
     return df_final
 
 
