@@ -19,7 +19,7 @@ def limpiar_y_procesar_xlsx(uploaded_file: io.BytesIO) -> pl.DataFrame:
     Lee un archivo XLSX, elimina las 3 primeras filas, renombra y aplica lógica de relleno (fillna).
     """
     
-    st.info("🌉 Leyendo XLSX, omitiendo 3 filas y pasando a Polars...")
+    st.info("🌉 Leyendo XLSX...")
     
     try:
         # Usamos Pandas para la lectura de Excel: header=None, skiprows=3
@@ -107,10 +107,9 @@ def limpiar_y_procesar_xlsx(uploaded_file: io.BytesIO) -> pl.DataFrame:
          
     return df_final
 
-
 # --- 4. Aplicación Streamlit y Mecanismo de Carga ---
-
-st.title("Polars/Streamlit: Procesador de Datos XLSX")
+st.set_page_config(layout="wide", page_title="SETs EPE", page_icon="⚡")
+st.title("⚡ EPE - Sub Estaciones Transformadoras")
 st.markdown("---")
 
 uploaded_file = st.file_uploader(
@@ -127,8 +126,8 @@ if uploaded_file is not None:
         df_procesado = limpiar_y_procesar_xlsx(uploaded_file)
         
         if not df_procesado.is_empty():
-            st.success("✅ Procesamiento exitoso. Datos listos en Polars.")
-            st.subheader("Datos Limpios (Primeras 5 Filas)")
+            st.success("✅ Procesamiento exitoso..")
+            st.subheader("Datos limpios (vista previa)")
             
             # Mostrar el DataFrame de Polars en Streamlit
             st.dataframe(df_procesado.to_pandas().head())
