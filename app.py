@@ -130,7 +130,7 @@ if uploaded_file is not None:
             st.subheader("Contenido del archivo")
             
             # Mostrar el DataFrame de Polars en Streamlit
-            st.dataframe(df_procesado.to_pandas().head())
+            st.dataframe(df_procesado.to_pandas())
             
             st.download_button(
                 label="💾 Descargar datos",
