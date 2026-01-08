@@ -28,7 +28,8 @@ def limpiar_y_procesar_xlsx(uploaded_file: io.BytesIO) -> pl.DataFrame:
             header=None,
             skiprows=3,
             engine='openpyxl',
-            sheet_name=0
+            sheet_name=0,
+            dtype={3: str}  # Forzar columna "# SET" (índice 3) como string para preservar ceros iniciales
         )
         
     except Exception as e:
