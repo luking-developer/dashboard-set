@@ -1,4 +1,5 @@
 import streamlit as st
+from st_copy import copy_button
 import pandas as pd
 import polars as pl
 import io
@@ -165,9 +166,23 @@ if uploaded_file is not None:
             free_sets = st.subheader("Números de SET disponibles", anchor="free_sets")
             col_urbano, col_rural = st.columns(2)
             with col_urbano:
-                st.metric(label=f"🚗 # SET Urbano disponible", value=st.code(f"{next_urbano:08d}", language="python"), border=True)
+                set_urbano = f"{next_urbano:08d}"
+                st.metric(label=f"🚗 # SET Urbana disponible", value=set_urbano, border=True)
+                copy_button(
+                    set_urbano,
+                    tooltip="Copiar SET Urbana",
+                    copied_label="Copiado!",
+                    icon="st",
+                )
             with col_rural:
-                st.metric(label=f"🚜 # SET Rural disponible", value=st.code(f"{next_rural:08d}", language="python"), border=True)
+                set_rural = f"{next_rural:08d}"
+                st.metric(label=f"🚜 # SET Rural disponible", value=set_rural, border=True)
+                copy_button(
+                    set_rural,
+                    tooltip="Copiar SET Rural",
+                    copied_label="Copiado!",
+                    icon="st",
+                )
 
             scroll_to_anchor("free_sets")
             
