@@ -62,7 +62,7 @@ def limpiar_y_procesar_xlsx(uploaded_file: io.BytesIO) -> pl.DataFrame:
     if df_pl.shape[1] != len(NUEVAS_CABECERAS):
         st.error(
             f"⚠️ **FALLO CRÍTICO DE FORMATO.** El archivo tiene **{df_pl.shape[1]}** columnas. Se esperaban **{len(NUEVAS_CABECERAS)}**.")
-        st.stop()
+        return pl.DataFrame()
 
         # 2. Renombrar las columnas
         old_col_names = [str(i) for i in range(len(NUEVAS_CABECERAS))]
