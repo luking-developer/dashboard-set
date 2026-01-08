@@ -147,9 +147,9 @@ if uploaded_file is not None:
             
             col_urbano, col_rural = st.columns(2)
             with col_urbano:
-                st.metric(label=f"🚗 # SET Urbano disponible, {next_urbano:08d}", border=True)
+                st.metric(label="🚗 # SET Urbano disponible", value=f"{next_urbano:08d}", border=True)
             with col_rural:
-                st.metric(label=f"🚜 # SET Rural disponible, {next_rural:08d}", border=True)
+                st.metric(label="🚜 # SET Rural disponible", value=f"{next_rural:08d}", border=True)
             
             st.subheader("Contenido del archivo")
             
