@@ -174,12 +174,21 @@ if uploaded_file is not None:
                     icon="st",
                 )
                 st.markdown("""
-                    <div style="position: relative; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
-                        <div style="position: absolute; top: 8px; right: 8px;">{}</div>
-                        <div style="font-size: 14px; color: #666;">🚗 # SET Urbana disponible</div>
-                        <div style="font-size: 24px; font-weight: bold; margin: 8px 0;">{}</div>
+                    <style>
+                    .metric-container .stElementContainer {
+                      position: absolute !important;
+                      top: 0 !important;
+                      right: 0 !important;
+                      z-index: 10 !important;
+                    }
+                    </style>
+                    <div class="metric-container" style="position: relative; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
+                      {}
+                      <div style="font-size: 14px; color: #666;">🚗 # SET Urbana disponible</div>
+                      <div style="font-size: 24px; font-weight: bold; margin: 8px 0;">{}</div>
                     </div>
-                    """.format(copy_urbano, set_urbano), unsafe_allow_html=True)
+                    """.format(copy_urbano, set_urbano), unsafe_allow_html=True
+                )
             with col_rural:
                 set_rural = f"{next_rural:08d}"
                 copy_rural = copy_button(
@@ -189,12 +198,21 @@ if uploaded_file is not None:
                     icon="st",
                 )
                 st.markdown("""
-                <div style="position: relative; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
-                    <div style="position: absolute; top: 8px; right: 8px;">{}</div>
+                    <style>
+                    .metric-container .stElementContainer {
+                    position: absolute !important;
+                    top: 0 !important;
+                    right: 0 !important;
+                    z-index: 10 !important;
+                    }
+                    </style>
+                    <div class="metric-container" style="position: relative; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
+                    {}
                     <div style="font-size: 14px; color: #666;">🚜 # SET Rural disponible</div>
                     <div style="font-size: 24px; font-weight: bold; margin: 8px 0;">{}</div>
-                </div>
-                """.format(copy_rural, set_rural), unsafe_allow_html=True)
+                    </div>
+                    """.format(copy_rural, set_rural), unsafe_allow_html=True
+                )
 
             scroll_to_anchor("free_sets")
             
