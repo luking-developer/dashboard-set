@@ -1,6 +1,6 @@
 import streamlit as st
-import polars as pl
 import pandas as pd
+import polars as pl
 import io
 
 # --- 1. Definición de las nuevas cabeceras (28 elementos) ---
@@ -165,9 +165,9 @@ if uploaded_file is not None:
             free_sets = st.subheader("Números de SET disponibles", anchor="free_sets")
             col_urbano, col_rural = st.columns(2)
             with col_urbano:
-                st.metric(label="🚗 # SET Urbano disponible", value=f"{next_urbano:08d}", border=True)
+                st.metric(label=f"🚗 # SET Urbano disponible", value=st.code(f"{next_urbano:08d}"), border=True)
             with col_rural:
-                st.metric(label="🚜 # SET Rural disponible", value=f"{next_rural:08d}", border=True)
+                st.metric(label=f"🚜 # SET Rural disponible", value=st.code(f"{next_rural:08d}"), border=True)
             
             scroll_to_anchor("free_sets")
             
