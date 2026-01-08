@@ -97,6 +97,9 @@ def limpiar_y_procesar_xlsx(uploaded_file: io.BytesIO) -> pl.DataFrame:
     # Polars la haya inferido como numérica.
     for col in string_like_cols:
          df_final = df_final.with_columns(pl.col(col).cast(pl.String))
+    
+    # Forzar "# SET" como string para preservar ceros iniciales
+    df_final = df_final.with_columns(pl.col("# SET").cast(pl.String))
          
     # 5. Volver a propagar por si la conversión de Pandas dejó los None como None String.
     # Este paso es una doble comprobación de robustez, no debería ser estrictamente necesario.
@@ -128,6 +131,26 @@ if uploaded_file is not None:
         
         if not df_procesado.is_empty():
             st.success("✅ Procesamiento exitoso.")
+            
+            # Calcular siguientes números libres para # SET
+            set_values = df_procesado.select("# SET").to_series().drop_nulls().unique().to_list()
+            # Filtrar códigos válidos de 8 dígitos
+            valid_sets = [s for s in set_values if isinstance(s, str) and len(s) == 8 and s.isdigit()]
+            
+            # Urbano
+            urbano_sets = [int(s) for s in valid_sets if s[-4] < '5']
+            next_urbano = max(urbano_sets) + 1 if urbano_sets else 10000000
+            
+            # Rural
+            rural_sets = [int(s) for s in valid_sets if s[-4] >= '5']
+            next_rural = max(rural_sets) + 1 if rural_sets else 50000000
+            
+            col_urbano, col_rural = st.columns(2)
+            with col_urbano:
+                st.metric(f"🚗 # SET Urbano disponible: {next_urbano:08d}")
+            with col_rural:
+                st.metric(f"🚜 # SET Rural disponible: {next_rural:08d}")
+            
             st.subheader("Contenido del archivo")
             
             # Mostrar el DataFrame de Polars en Streamlit
