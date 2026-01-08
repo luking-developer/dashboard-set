@@ -145,7 +145,7 @@ if uploaded_file is not None:
             next_urbano = max(urbano_sets) + 1 if urbano_sets else 10000000
             
             # Rural
-            rural_sets = [int(s) for s in valid_sets if s[-4] >= '5']
+            rural_sets = [int(s) for s in valid_sets if s[-4] == '5']
             next_rural = max(rural_sets) + 1 if rural_sets else 50000000
             
             col_urbano, col_rural = st.columns(2)
