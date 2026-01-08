@@ -190,6 +190,18 @@ if uploaded_file is not None:
                       <div style="font-size: 14px; color: #666;">🚗 # SET Urbana disponible</div>
                       <div style="font-size: 24px; font-weight: bold; margin: 8px 0;">{}</div>
                     </div>
+                    <script>
+                        let metric = document.currentScript.parentElement;
+                        let parent = metric.parentElement;
+                        let button = parent.querySelector('.stElementContainer');
+                        if (button) {{
+                            metric.appendChild(button);
+                            button.style.position = 'absolute';
+                            button.style.top = '8px';
+                            button.style.right = '8px';
+                            button.style.zIndex = '10';
+                        }}
+                    </script>
                     """.format(copy_urbano, set_urbano), unsafe_allow_html=True
                 )
             with col_rural:
