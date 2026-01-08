@@ -180,6 +180,7 @@ if uploaded_file is not None:
                     )
             
             # Mostrar el DataFrame de Polars en Streamlit
+            df_procesado = df_procesado.slice(0, df_procesado.height - 1)
             df_pandas = df_procesado.to_pandas()
             df_pandas["# SET"] = df_pandas["# SET"].astype(str)
             st.dataframe(df_pandas)
