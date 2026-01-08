@@ -164,6 +164,17 @@ if uploaded_file is not None:
             next_rural = max(rural_sets) + 1 if rural_sets else 50000000
             
             free_sets = st.subheader("Números de SET disponibles", anchor="free_sets")
+            # Agregar CSS global para posicionar los botones
+            st.markdown("""
+                <style>
+                .metric-container .stElementContainer {
+                    position: absolute !important;
+                    top: 0 !important;
+                    right: 0 !important;
+                    z-index: 10 !important;
+                }
+                </style>
+                """, unsafe_allow_html=True)
             col_urbano, col_rural = st.columns(2)
             with col_urbano:
                 set_urbano = f"{next_urbano:08d}"
@@ -174,14 +185,6 @@ if uploaded_file is not None:
                     icon="st",
                 )
                 st.markdown("""
-                    <style>
-                    .metric-container .stElementContainer {
-                      position: absolute !important;
-                      top: 0 !important;
-                      right: 0 !important;
-                      z-index: 10 !important;
-                    }
-                    </style>
                     <div class="metric-container" style="position: relative; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
                       {}
                       <div style="font-size: 14px; color: #666;">🚗 # SET Urbana disponible</div>
@@ -198,14 +201,6 @@ if uploaded_file is not None:
                     icon="st",
                 )
                 st.markdown("""
-                    <style>
-                    .metric-container .stElementContainer {
-                    position: absolute !important;
-                    top: 0 !important;
-                    right: 0 !important;
-                    z-index: 10 !important;
-                    }
-                    </style>
                     <div class="metric-container" style="position: relative; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
                     {}
                     <div style="font-size: 14px; color: #666;">🚜 # SET Rural disponible</div>
