@@ -136,7 +136,7 @@ if uploaded_file is not None:
             st.download_button(
                 label="💾 Descargar datos",
                 data=df_procesado.write_csv(None), # Polars escribe el CSV en memoria (buffer)
-                file_name='datos_limpios.csv',
+                file_name='reporte_sets.csv',
                 mime='text/csv',
             )
             
