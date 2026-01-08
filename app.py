@@ -167,28 +167,34 @@ if uploaded_file is not None:
             col_urbano, col_rural = st.columns(2)
             with col_urbano:
                 set_urbano = f"{next_urbano:08d}"
-                st.markdown(f"""
-                    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
-                        <div style="font-size: 14px; color: #666;">🚗 # SET Urbana disponible</div>
-                        <div style="font-size: 24px; font-weight: bold; margin: 8px 0;">{set_urbano}</div>
-                        """ + copy_button(
+                copy_urbano = copy_button(
                     set_urbano,
                     tooltip="Copiar SET Urbana",
                     copied_label="Copiado!",
                     icon="st",
-                ) + "</div>", unsafe_allow_html=True)
+                )
+                st.markdown(f"""
+                    <div style="position: relative; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
+                        <div style="position: absolute; top: 8px; right: 8px;">{copy_urbano}</div>
+                        <div style="font-size: 14px; color: #666;">🚗 # SET Urbana disponible</div>
+                        <div style="font-size: 24px; font-weight: bold; margin: 8px 0;">{set_urbano}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
             with col_rural:
                 set_rural = f"{next_rural:08d}"
-                st.markdown(f"""
-                    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
-                        <div style="font-size: 14px; color: #666;">🚜 # SET Rural disponible</div>
-                        <div style="font-size: 24px; font-weight: bold; margin: 8px 0;">{set_urbano}</div>
-                        """ + copy_button(
+                copy_rural = copy_button(
                     set_rural,
                     tooltip="Copiar SET Rural",
                     copied_label="Copiado!",
                     icon="st",
-                ) + "</div>", unsafe_allow_html=True)
+                )
+                st.markdown(f"""
+                <div style="position: relative; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
+                    <div style="position: absolute; top: 8px; right: 8px;">{copy_rural}</div>
+                    <div style="font-size: 14px; color: #666;">🚜 # SET Rural disponible</div>
+                    <div style="font-size: 24px; font-weight: bold; margin: 8px 0;">{set_rural}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
             scroll_to_anchor("free_sets")
             
