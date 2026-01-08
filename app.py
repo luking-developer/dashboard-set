@@ -154,7 +154,7 @@ if uploaded_file is not None:
 
             col_urbano, col_rural = st.columns(2)
             with col_urbano:
-                col_data_urbano, col_copy_urbano = st.columns([2, 1])
+                col_data_urbano, col_copy_urbano = st.columns([10, 1])
                 with col_data_urbano:
                     set_urbano = f"{next_urbano:08d}"
                     st.metric(label="🚗 # SET Urbana disponible", value=set_urbano, border=True)
@@ -167,7 +167,7 @@ if uploaded_file is not None:
                     )
                 
             with col_rural:
-                col_data_rural, col_copy_rural = st.columns([2, 1])
+                col_data_rural, col_copy_rural = st.columns([10, 1])
                 with col_data_rural:
                     set_rural = f"{next_rural:08d}"
                     st.metric(label="🚜 # SET Rural disponible", value=set_rural, border=True)
