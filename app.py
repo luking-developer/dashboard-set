@@ -163,34 +163,57 @@ if uploaded_file is not None:
             rural_sets = [int(s) for s in valid_sets if s[-4] == '5']
             next_rural = max(rural_sets) + 1 if rural_sets else 50000000
             
-            free_sets = st.subheader(
-                "Números de SET disponibles", anchor="free_sets")
-
+            free_sets = st.subheader("Números de SET disponibles", anchor="free_sets")
+            # Agregar CSS global para posicionar los botones
+            st.markdown("""
+                <style>
+                .metric-container .stElementContainer {
+                    position: absolute !important;
+                    top: 0 !important;
+                    right: 0 !important;
+                    z-index: 10 !important;
+                }
+                </style>
+                """, unsafe_allow_html=True)
             col_urbano, col_rural = st.columns(2)
-
             with col_urbano:
-                col_dato, col_copy = st.columns([10, 1])
-                with col_dato:
-                    set_urbano = f"{next_urbano:08d}"
-                with col_copy:
-                    copy_urbano = copy_button(
-                        set_urbano,
-                        tooltip="Copiar SET Urbana",
-                        copied_label="Copiado!",
-                        icon="st",
-                    )
+                set_urbano = f"{next_urbano:08d}"
+                copy_urbano = copy_button(
+                    set_urbano,
+                    tooltip="Copiar SET Urbana",
+                    copied_label="Copiado!",
+                    icon="st",
+                )
+                st.markdown("""
+                    <div class="metric-container" style="position: relative; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
+                      {}
+                      <div style="font-size: 14px; color: #666;">🚗 # SET Urbana disponible</div>
+                      <div style="font-size: 24px; font-weight: bold; margin: 8px 0;">{}</div>
+                    </div>
+                    """.format(copy_urbano, set_urbano), unsafe_allow_html=True
+                )
             with col_rural:
-                col_dato, col_copy = st.columns([10, 1])
-                with col_dato:
-                    set_rural = f"{next_rural:08d}"
-                with col_copy:
-                    copy_rural = copy_button(
-                        set_rural,
-                        tooltip="Copiar SET Rural",
-                        copied_label="Copiado!",
-                        icon="st",
-                    )
+                set_rural = f"{next_rural:08d}"
+                copy_rural = copy_button(
+                    set_rural,
+                    tooltip="Copiar SET Rural",
+                    copied_label="Copiado!",
+                    icon="st",
+                )
+                st.markdown("""
+                    <div class="metric-container" style="position: relative; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
+                    {}
+                    <div style="font-size: 14px; color: #666;">🚜 # SET Rural disponible</div>
+                    <div style="font-size: 24px; font-weight: bold; margin: 8px 0;">{}</div>
+                    </div>
+                    """.format(copy_rural, set_rural), unsafe_allow_html=True
+                )
 
+            scroll_to_anchor("free_sets")
+            
+            # Script para hacer scroll hasta las métricas
+            st.markdown('<script>document.getElementById("free_sets").scrollIntoView();</script>', unsafe_allow_html=True)
+            
             # Mostrar el DataFrame de Polars en Streamlit
             df_pandas = df_procesado.to_pandas()
             df_pandas["# SET"] = df_pandas["# SET"].astype(str)
