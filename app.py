@@ -173,7 +173,13 @@ if uploaded_file is not None:
                     copied_label="Copiado!",
                     icon="st",
                 )
-                st.metric(label=f"🚗 # SET Urbana disponible", value=set_urbano + copy_urbano, border=True)
+                st.markdown(f"""
+                    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
+                        <div style="font-size: 14px; color: #666;">🚗 # SET Urbana disponible</div>
+                        <div style="font-size: 24px; font-weight: bold; margin: 8px 0;">{set_urbano}</div>
+                        {copy_urbano}
+                    </div>
+                    """, unsafe_allow_html=True)
             with col_rural:
                 set_rural = f"{next_rural:08d}"
                 copy_rural = copy_button(
@@ -182,7 +188,13 @@ if uploaded_file is not None:
                     copied_label="Copiado!",
                     icon="st",
                 )
-                st.metric(label=f"🚜 # SET Rural disponible", value=set_rural + copy_rural, border=True)
+                st.markdown(f"""
+                    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
+                        <div style="font-size: 14px; color: #666;">🚜 # SET Rural disponible</div>
+                        <div style="font-size: 24px; font-weight: bold; margin: 8px 0;">{set_urbano}</div>
+                        {copy_rural}
+                    </div>
+                    """, unsafe_allow_html=True)
 
             scroll_to_anchor("free_sets")
             
