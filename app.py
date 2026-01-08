@@ -134,6 +134,9 @@ if uploaded_file is not None:
         if not df_procesado.is_empty():
             st.success("✅ Procesamiento exitoso.")
             
+            # Filtrar la última fila (totales) antes de procesar
+            df_procesado = df_procesado.slice(0, df_procesado.height - 1)
+            
             # Ancla para las métricas
             st.markdown('<div id="free_sets"></div>', unsafe_allow_html=True)
             
@@ -179,15 +182,17 @@ if uploaded_file is not None:
                         icon="st",
                     )
             
-            # Mostrar el DataFrame de Polars en Streamlit
-            df_procesado = df_procesado.slice(0, df_procesado.height - 1)
+            # Mostrar el DataFrame editable
             df_pandas = df_procesado.to_pandas()
             df_pandas["# SET"] = df_pandas["# SET"].astype(str)
-            st.dataframe(df_pandas)
+            edited_df = st.data_editor(df_pandas, num_rows="dynamic")
+            
+            # Convertir el DataFrame editado a Polars para descarga
+            edited_pl = pl.from_pandas(edited_df)
             
             st.download_button(
                 label="💾 Descargar datos",
-                data=df_procesado.write_csv(None), # Polars escribe el CSV en memoria (buffer)
+                data=edited_pl.write_csv(None), # Polars escribe el CSV en memoria (buffer)
                 file_name='reporte_sets.csv',
                 mime='text/csv',
             )
