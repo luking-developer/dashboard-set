@@ -167,22 +167,22 @@ if uploaded_file is not None:
             col_urbano, col_rural = st.columns(2)
             with col_urbano:
                 set_urbano = f"{next_urbano:08d}"
-                st.metric(label=f"🚗 # SET Urbana disponible", value=set_urbano, border=True)
-                copy_button(
+                copy_urbano = copy_button(
                     set_urbano,
                     tooltip="Copiar SET Urbana",
                     copied_label="Copiado!",
                     icon="st",
                 )
+                st.metric(label=f"🚗 # SET Urbana disponible", value=set_urbano + copy_urbano, border=True)
             with col_rural:
                 set_rural = f"{next_rural:08d}"
-                st.metric(label=f"🚜 # SET Rural disponible", value=set_rural, border=True)
-                copy_button(
+                copy_rural = copy_button(
                     set_rural,
                     tooltip="Copiar SET Rural",
                     copied_label="Copiado!",
                     icon="st",
                 )
+                st.metric(label=f"🚜 # SET Rural disponible", value=set_rural + copy_rural, border=True)
 
             scroll_to_anchor("free_sets")
             
