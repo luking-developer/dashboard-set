@@ -132,6 +132,9 @@ if uploaded_file is not None:
         if not df_procesado.is_empty():
             st.success("✅ Procesamiento exitoso.")
             
+            # Ancla para las métricas
+            st.markdown('<div id="free_sets"></div>', unsafe_allow_html=True)
+            
             # Calcular siguientes números libres para # SET
             set_values = df_procesado.select("# SET").to_series().drop_nulls().unique().to_list()
             # Filtrar códigos válidos de 8 dígitos
@@ -150,6 +153,9 @@ if uploaded_file is not None:
                 st.metric(label="🚗 # SET Urbano disponible", value=f"{next_urbano:08d}", border=True)
             with col_rural:
                 st.metric(label="🚜 # SET Rural disponible", value=f"{next_rural:08d}", border=True)
+            
+            # Script para hacer scroll hasta las métricas
+            st.markdown('<script>document.getElementById("free_sets").scrollIntoView();</script>', unsafe_allow_html=True)
             
             st.subheader("Contenido del archivo")
             
