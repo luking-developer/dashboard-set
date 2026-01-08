@@ -115,7 +115,7 @@ st.set_page_config(layout="wide", page_title="SETs EPE", page_icon="⚡")
 st.title("⚡ EPE - Sub Estaciones Transformadoras")
 st.markdown("---")
 
-st.subheader("Sube tu archivo de reporte de SETs obteniendolo desde la aplicación de Reportes de EPE, menú _**Líneas y SETs > SETs por Área**_ y luego pulsando el cuarto botón (Export report) en formato XLSX.")
+st.markdown("<h4>Sube tu archivo de reporte de SETs obteniéndolo desde la aplicación de *Reportes de EPE*, menú _*Líneas y SETs > SETs por Área*_ y luego pulsando el cuarto botón (Export report) en formato XLSX.</h4>")
 uploaded_file = st.file_uploader(
     "Sube tu archivo XLSX con la tabla de datos", 
     # La manera de cargar el archivo con Streamlit, aceptando .xlsx y .xls
