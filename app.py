@@ -126,14 +126,14 @@ if uploaded_file is not None:
         df_procesado = limpiar_y_procesar_xlsx(uploaded_file)
         
         if not df_procesado.is_empty():
-            st.success("✅ Procesamiento exitoso..")
-            st.subheader("Datos limpios (vista previa)")
+            st.success("✅ Procesamiento exitoso.")
+            st.subheader("Contenido del archivo")
             
             # Mostrar el DataFrame de Polars en Streamlit
             st.dataframe(df_procesado.to_pandas().head())
             
             st.download_button(
-                label="Descargar Datos Limpios (CSV)",
+                label="💾 Descargar datos",
                 data=df_procesado.write_csv(None), # Polars escribe el CSV en memoria (buffer)
                 file_name='datos_limpios.csv',
                 mime='text/csv',
