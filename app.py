@@ -14,6 +14,19 @@ NUEVAS_CABECERAS = [
     "Energia anual Industrial", "Energia anual otros"
 ]
 
+# Function to generate and inject JavaScript for scrolling
+def scroll_to_anchor(anchor_id):
+    # This JS script runs when the button is clicked and the page reruns
+    js_script = f"""
+    <script>
+        var element = document.getElementById('{anchor_id}');
+        if (element) {{
+            element.scrollIntoView({{ behavior: 'smooth' }});
+        }}
+    </script>
+    """
+    st.markdown(js_script, unsafe_allow_html=True)
+
 def limpiar_y_procesar_xlsx(uploaded_file: io.BytesIO) -> pl.DataFrame:
     """
     Lee un archivo XLSX, elimina las 3 primeras filas, renombra y aplica lógica de relleno (fillna).
@@ -149,16 +162,17 @@ if uploaded_file is not None:
             rural_sets = [int(s) for s in valid_sets if s[-4] == '5']
             next_rural = max(rural_sets) + 1 if rural_sets else 50000000
             
+            free_sets = st.subheader("Números de SET disponibles", anchor="free_sets")
             col_urbano, col_rural = st.columns(2)
             with col_urbano:
                 st.metric(label="🚗 # SET Urbano disponible", value=f"{next_urbano:08d}", border=True)
             with col_rural:
                 st.metric(label="🚜 # SET Rural disponible", value=f"{next_rural:08d}", border=True)
             
+            scroll_to_anchor("free_sets")
+            
             # Script para hacer scroll hasta las métricas
             st.markdown('<script>document.getElementById("free_sets").scrollIntoView();</script>', unsafe_allow_html=True)
-            
-            st.subheader("Contenido del archivo")
             
             # Mostrar el DataFrame de Polars en Streamlit
             df_pandas = df_procesado.to_pandas()
