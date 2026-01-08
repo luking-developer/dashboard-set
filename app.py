@@ -167,34 +167,28 @@ if uploaded_file is not None:
             col_urbano, col_rural = st.columns(2)
             with col_urbano:
                 set_urbano = f"{next_urbano:08d}"
-                copy_urbano = copy_button(
-                    set_urbano,
-                    tooltip="Copiar SET Urbana",
-                    copied_label="Copiado!",
-                    icon="st",
-                )
                 st.markdown(f"""
                     <div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
                         <div style="font-size: 14px; color: #666;">🚗 # SET Urbana disponible</div>
                         <div style="font-size: 24px; font-weight: bold; margin: 8px 0;">{set_urbano}</div>
-                        {copy_urbano}
-                    </div>
-                    """, unsafe_allow_html=True)
-            with col_rural:
-                set_rural = f"{next_rural:08d}"
-                copy_rural = copy_button(
-                    set_rural,
-                    tooltip="Copiar SET Rural",
+                        """ + copy_button(
+                    set_urbano,
+                    tooltip="Copiar SET Urbana",
                     copied_label="Copiado!",
                     icon="st",
-                )
+                ) + "</div>", unsafe_allow_html=True)
+            with col_rural:
+                set_rural = f"{next_rural:08d}"
                 st.markdown(f"""
                     <div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 8px 0; background-color: #f9f9f9;">
                         <div style="font-size: 14px; color: #666;">🚜 # SET Rural disponible</div>
                         <div style="font-size: 24px; font-weight: bold; margin: 8px 0;">{set_urbano}</div>
-                        {copy_rural}
-                    </div>
-                    """, unsafe_allow_html=True)
+                        """ + copy_button(
+                    set_rural,
+                    tooltip="Copiar SET Rural",
+                    copied_label="Copiado!",
+                    icon="st",
+                ) + "</div>", unsafe_allow_html=True)
 
             scroll_to_anchor("free_sets")
             
