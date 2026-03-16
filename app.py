@@ -1,131 +1,21 @@
-import streamlit as st
-from st_copy import copy_button
+import io
+import warnings
+
+import folium
 import pandas as pd
 import polars as pl
-import io
+import streamlit as st
+from st_copy import copy_button
+from streamlit_folium import st_folium
+
+from utils.metrics import calcular_metricas_y_colores
+from utils.qr_code import generar_qr_base64
+from utils.sets import buscar_primer_hueco
 from utils.strings import *
+from utils.uploaded_file import limpiar_y_procesar_xlsx
 
-# --- Definicion de las nuevas cabeceras ---
-NUEVAS_CABECERAS = new_headers
-
-def limpiar_y_procesar_xlsx(uploaded_file: io.BytesIO) -> pl.DataFrame:
-    """
-    Lee un archivo XLSX, elimina las 3 primeras filas, renombra y aplica logica de relleno (fillna).
-    """
-    
-    st.info(READING_FILE)
-    
-    try:
-        # Usamos Pandas para la lectura de Excel: header=None, skiprows=3
-        df_pd = pd.read_excel(
-            uploaded_file,
-            header=None,
-            skiprows=3,
-            engine='openpyxl',
-            sheet_name=0,
-            dtype={3: str}  # Forzar columna "# SET" (indice 3) como string para preservar ceros iniciales
-        )
-        
-    except Exception as e:
-        st.error(f"Error al intentar leer el archivo Excel: {e}")
-        return pl.DataFrame()
-
-    # --- A. Transformacion, Validacion y Renombramiento ---
-    df_pl = pl.from_pandas(df_pd)
-    
-    # Validacion de Columnas
-    if df_pl.shape[1] != len(NUEVAS_CABECERAS):
-        st.error(f"⚠️ **ERROR:** El archivo tiene **{df_pl.shape[1]}** columnas. Se esperaban **{len(NUEVAS_CABECERAS)}**.")
-        st.stop()
-        
-    # Renombrar las columnas
-    old_col_names = [str(i) for i in range(len(NUEVAS_CABECERAS))]
-    column_mapping = {old_col: new_col for old_col, new_col in zip(old_col_names, NUEVAS_CABECERAS)}
-    df_final = df_pl.rename(column_mapping)
-    
-    # Definir columnas clave
-    cols_ffill = ["Sucursal", "Area", "Distrito"]
-    
-    # Aplicar propagacion hacia adelante (ffill) a las columnas clave
-    # Si detecta None, copia el valor inmediatamente anterior.
-    for col in cols_ffill:
-        # Nota: fill_null(strategy="forward") es la funcion de ffill en Polars
-        df_final = df_final.with_columns(
-            pl.col(col).fill_null(strategy="forward")
-        )
-
-    # Relleno condicional para el resto de columnas
-    
-    # Identificar columnas numericas vs. de string
-    # Polars infiere tipos durante la conversion de Pandas.
-    
-    # a) Columnas que deben rellenarse con 0 (Numericas)
-    # Buscamos columnas que sean de tipo Numerico (Integer o Float) Y que NO sean las de ffill
-    numerical_cols = [
-        name for name, dtype in df_final.schema.items() 
-        if dtype in {pl.Int8, pl.Int16, pl.Int32, pl.Int64, pl.Float32, pl.Float64}
-        and name not in cols_ffill
-    ]
-    
-    # b) Columnas que deben MANTENER los nulls (Strings/Otros)
-    # Buscamos columnas que NO sean numericas Y NO sean las de ffill.
-    string_like_cols = [
-        name for name, dtype in df_final.schema.items() 
-        if dtype not in {pl.Int8, pl.Int16, pl.Int32, pl.Int64, pl.Float32, pl.Float64}
-        and name not in cols_ffill
-    ]
-
-    # Aplicar relleno con 0 a todas las columnas numericas
-    df_final = df_final.with_columns(
-        [pl.col(col).fill_null(0) for col in numerical_cols]
-    )
-
-    # Para string_like_cols (como Descripciones, Domicilio, etc.): 
-    # Dejamos la operacion de .fill_null() fuera. Polars mantiene los valores Null/None
-    # por defecto si no se les aplica ninguna funcion de relleno.
-
-    # 4. Forzar el tipo de dato de las columnas de String/Categoria si Polars las dejo como Int/Float.
-    # Esto es una limpieza extra para evitar que, si una columna de string tiene muchos None,
-    # Polars la haya inferido como numerica.
-    for col in string_like_cols:
-         df_final = df_final.with_columns(pl.col(col).cast(pl.String))
-    
-    # Forzar "# SET" como string para preservar ceros iniciales
-    df_final = df_final.with_columns(pl.col("# SET").cast(pl.String))
-         
-    # 5. Volver a propagar por si la conversion de Pandas dejo los None como None String.
-    # Este paso es una doble comprobacion de robustez, no deberia ser estrictamente necesario.
-    for col in cols_ffill:
-        df_final = df_final.with_columns(
-            pl.col(col).fill_null(strategy="forward")
-        )
-         
-    return df_final
-
-def buscar_primer_hueco(lista_sets, inicio_rango):
-    """
-    Encuentra el primer numero faltante en una secuencia.
-    Si no hay huecos, devuelve el maximo + 1.
-    Si la lista esta vacia, devuelve el inicio del rango.
-    """
-    if not lista_sets:
-        return inicio_rango
-    
-    conjunto_sets = set(lista_sets)
-    min_val = min(lista_sets)
-    max_val = max(lista_sets)
-    
-    # Checkear si falta el numero inicial del rango
-    if min_val > inicio_rango:
-        return inicio_rango
-
-    # Buscar el primer hueco entre el minimo y el maximo existente
-    for i in range(min_val, max_val + 1):
-        if i not in conjunto_sets:
-            return i
-            
-    # Si no hay huecos, el siguiente es el maximo + 1
-    return max_val + 1
+# Silenciar advertencia de estilos de Excel
+warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
 # --- 4. Aplicacion Streamlit y Mecanismo de Carga ---
 st.set_page_config(layout="wide", page_title="SETs EPE", page_icon="⚡")
@@ -206,10 +96,47 @@ if uploaded_file is not None:
                     )
             
             # Mostrar el DataFrame de Polars en Streamlit
-            df_procesado = df_procesado.slice(0, df_procesado.height - 1)
-            df_pandas = df_procesado.to_pandas()
-            df_pandas["# SET"] = df_pandas["# SET"].astype(str)
-            st.dataframe(df_pandas, hide_index=True)
+            # 1. Ejecutar cálculos de carga y colores
+            df_procesado = calcular_metricas_y_colores(df_procesado)
+
+            # 2. Renderizar Mapa
+            st.subheader("📍 Mapa de SETs")
+            df_mapa = df_procesado.filter(pl.col("X").is_not_null() & pl.col("Y").is_not_null())
+
+            if not df_mapa.is_empty():
+                # Crear el objeto mapa centrado
+                m = folium.Map(location=[df_mapa["Y"].mean(), df_mapa["X"].mean()], zoom_start=13)
+                
+                for row in df_mapa.to_dicts():
+                    # Crear link para el QR
+                    link = f"https://www.google.com/maps?q={row['Y']},{row['X']}"
+                    qr_b64 = generar_qr_base64(link)
+                    
+                    popup_html = f"""
+                    <div style="font-family:sans-serif; width:160px;">
+                        <b style="color:#1f77b4;">SET {row['# SET']}</b><br>
+                        <b>Carga:</b> {row['Indice_Carga']:.1f}%<br>
+                        <hr>
+                        <img src="data:image/png;base64,{qr_b64}" width="100" style="display:block;margin:auto;">
+                        <p style="font-size:10px;text-align:center;">Escanear para GPS</p>
+                    </div>
+                    """
+                    
+                    folium.CircleMarker(
+                        location=[row["Y"], row["X"]],
+                        radius=7,
+                        color=row["color_critico"],
+                        fill=True,
+                        popup=folium.Popup(popup_html, max_width=200)
+                    ).add_to(m)
+                
+                # Mostrar mapa en Streamlit
+                st_folium(m, width=1000, height=500, returned_objects=[])
+            else:
+                st.warning("No se encontraron coordenadas válidas para generar el mapa.")
+
+            # 3. Mostrar tabla de datos al final
+            st.dataframe(df_procesado.to_pandas(), hide_index=True)
             
             st.download_button(
                 label=DOWNLOAD_DATA,
