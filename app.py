@@ -8,8 +8,9 @@ import streamlit as st
 from st_copy import copy_button
 from streamlit_folium import st_folium
 
+from utils.filters import show_filter
 from utils.metrics import calcular_metricas_y_colores
-from utils.qr_code import generar_qr_base64
+from utils.qr_code_handler import generar_qr_base64
 from utils.sets import buscar_primer_hueco
 from utils.strings import *
 from utils.uploaded_file import limpiar_y_procesar_xlsx
@@ -17,17 +18,23 @@ from utils.uploaded_file import limpiar_y_procesar_xlsx
 # Silenciar advertencia de estilos de Excel
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
-# --- 4. Aplicacion Streamlit y Mecanismo de Carga ---
+# --- Aplicacion Streamlit y Mecanismo de Carga ---
 st.set_page_config(layout="wide", page_title="SETs EPE", page_icon="⚡")
 st.title(APP_TITLE)
 st.markdown("---")
 
-st.info(APP_EXPLANATION)
-uploaded_file = st.file_uploader(
-    UPLOAD_MSG, 
-    # La manera de cargar el archivo con Streamlit, aceptando .xlsx y .xls
-    type=upload_format 
-)
+st.text(UPLOAD_MSG)
+col_1, col_2 = st.columns([3.5, 4.5])
+with col_1:
+    uploaded_file = st.file_uploader(
+        label=UPLOAD_MSG,
+        label_visibility="collapsed",
+        # La manera de cargar el archivo con Streamlit, aceptando .xlsx y .xls
+        type=upload_format 
+    )
+
+with col_2:
+    st.info(APP_EXPLANATION)
 
 if uploaded_file is not None:
     # uploaded_file es un objeto de tipo BytesIO, que pd.read_excel puede leer directamente.
@@ -99,39 +106,80 @@ if uploaded_file is not None:
             # 1. Ejecutar cálculos de carga y colores
             df_procesado = calcular_metricas_y_colores(df_procesado)
 
-            # 2. Renderizar Mapa
-            st.subheader("📍 Mapa de SETs")
-            df_mapa = df_procesado.filter(pl.col("X").is_not_null() & pl.col("Y").is_not_null())
+            if "coords" in df_procesado.columns:
+                df_procesado = df_procesado.drop("coords")
+
+            df_mapa = df_procesado.filter(
+                pl.col("Lat_Real").is_not_null() & 
+                pl.col("Lon_Real").is_not_null()
+            )
 
             if not df_mapa.is_empty():
-                # Crear el objeto mapa centrado
-                m = folium.Map(location=[df_mapa["Y"].mean(), df_mapa["X"].mean()], zoom_start=13)
-                
-                for row in df_mapa.to_dicts():
-                    # Crear link para el QR
-                    link = f"https://www.google.com/maps?q={row['Y']},{row['X']}"
-                    qr_b64 = generar_qr_base64(link)
-                    
-                    popup_html = f"""
-                    <div style="font-family:sans-serif; width:160px;">
-                        <b style="color:#1f77b4;">SET {row['# SET']}</b><br>
-                        <b>Carga:</b> {row['Indice_Carga']:.1f}%<br>
-                        <hr>
-                        <img src="data:image/png;base64,{qr_b64}" width="100" style="display:block;margin:auto;">
-                        <p style="font-size:10px;text-align:center;">Escanear para GPS</p>
-                    </div>
-                    """
-                    
-                    folium.CircleMarker(
-                        location=[row["Y"], row["X"]],
-                        radius=7,
-                        color=row["color_critico"],
-                        fill=True,
-                        popup=folium.Popup(popup_html, max_width=200)
-                    ).add_to(m)
-                
-                # Mostrar mapa en Streamlit
-                st_folium(m, width=1000, height=500, returned_objects=[])
+                # 2. Renderizar Mapa
+                st.subheader("📍 Mapa de estado de red")
+                df_mapa = show_filter(df_mapa)
+
+                cantidad_registros = df_mapa.height
+                with st.spinner(f"Procesando {cantidad_registros} registros y generando mapa interactivo..."):
+                    # 1. Configuración base
+                    c_lat, c_lon = df_mapa["Lat_Real"].mean(), df_mapa["Lon_Real"].mean()
+                    m = folium.Map(location=[c_lat, c_lon], zoom_start=14, prefer_canvas=False)
+
+                    for row in df_mapa.to_dicts():
+                        lat, lon = row["Lat_Real"], row["Lon_Real"]
+                        nombre_set = str(row['# SET'])
+                        indice_carga = round(row.get("Indice_Carga", 0), 2)
+
+                        if indice_carga is None:
+                            indice_carga = 0
+                        
+                        # Generar QR
+                        qr_link = f"https://www.google.com/maps?q={lat},{lon}"
+                        qr_img = generar_qr_base64(qr_link)
+                        
+                        # HTML del Popup simplificado al máximo
+                        # Usamos comillas simples para evitar conflictos con el JS interno de Folium
+                        popup_html = f"""
+                        <div style='width:160px; text-align:center; font-family:sans-serif;'>
+                            <b>SET {nombre_set}</b><br>
+                            Carga: {indice_carga:.2f}%<br>
+                            <hr style='margin:5px;'>
+                            <img src='data:image/png;base64,{qr_img}' width='100'><br>
+                            <a href='{qr_link}' target='_blank' style='font-size:10px;'>Abrir Maps</a>
+                        </div>
+                        """
+                        
+                        # 2. El Marcador Circular
+                        folium.CircleMarker(
+                            location=[lat, lon],
+                            radius=9,
+                            color=row.get("color", "blue"),
+                            fill=True,
+                            fill_opacity=0.8,
+                            popup=folium.Popup(popup_html, max_width=200),
+                            # Tooltip que se comporta como etiqueta pero es más ligero
+                            tooltip=folium.Tooltip(f"SET {nombre_set}", permanent=False) 
+                        ).add_to(m)
+
+                        # 3. Etiqueta de texto (Recuperada)
+                        # La dejamos fija para asegurar que el sistema funciona primero
+                        folium.map.Marker(
+                            [lat, lon],
+                            icon=folium.DivIcon(
+                                icon_size=(150,36),
+                                icon_anchor=(0,0),
+                                html=f'<div style="font-size: 9pt; font-weight: bold; color: black; text-shadow: 1px 1px white;">{nombre_set}</div>',
+                            )
+                        ).add_to(m)
+
+                    # 4. Renderizado con Key única para forzar actualización
+                    st_folium(
+                        m, 
+                        width="100%", 
+                        height=600, 
+                        returned_objects=[], 
+                        key="mapa_final_v1"
+                    )
             else:
                 st.warning("No se encontraron coordenadas válidas para generar el mapa.")
 

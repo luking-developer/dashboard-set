@@ -4,7 +4,7 @@ import pandas as pd
 import polars as pl
 import streamlit as st
 
-from utils.strings import NUEVAS_CABECERAS, READING_FILE
+from utils.strings import NEW_HEADERS, READING_FILE
 
 
 def limpiar_y_procesar_xlsx(uploaded_file: io.BytesIO) -> pl.DataFrame:
@@ -33,13 +33,13 @@ def limpiar_y_procesar_xlsx(uploaded_file: io.BytesIO) -> pl.DataFrame:
     df_pl = pl.from_pandas(df_pd)
     
     # Validacion de Columnas
-    if df_pl.shape[1] != len(NUEVAS_CABECERAS):
-        st.error(f"⚠️ **ERROR:** El archivo tiene **{df_pl.shape[1]}** columnas. Se esperaban **{len(NUEVAS_CABECERAS)}**.")
+    if df_pl.shape[1] != len(NEW_HEADERS):
+        st.error(f"⚠️ **ERROR:** El archivo tiene **{df_pl.shape[1]}** columnas. Se esperaban **{len(NEW_HEADERS)}**.")
         st.stop()
         
     # Renombrar las columnas
-    old_col_names = [str(i) for i in range(len(NUEVAS_CABECERAS))]
-    column_mapping = {old_col: new_col for old_col, new_col in zip(old_col_names, NUEVAS_CABECERAS)}
+    old_col_names = [str(i) for i in range(len(NEW_HEADERS))]
+    column_mapping = {old_col: new_col for old_col, new_col in zip(old_col_names, NEW_HEADERS)}
     df_final = df_pl.rename(column_mapping)
     
     # Definir columnas clave
